@@ -28,9 +28,9 @@ Este projeto é um sistema de rastreamento de motos desenvolvido em C# com .NET 
 - Associação de motos a pátios e clientes.
 - Monitoramento de localização das motos por meio de sensores.
 ### Observações 
--Recomendamos que ao abrir a aplicação no swagger, começe criando primeiro um patio, depois crie o cliente, depois crie a moto pois so é possivel criar uma moto se existe um cliente e patio cadastrado, por ultimo apos criar a moto crie sensores de localização e vincule a essa moto.
--Não é possivel criar motos com o mesmo numero de chassi, pois chassi é um valor unico
--Não é possivel criar clientes com o mesmo email, pois assim como o chassi, o email é unico.
+- Recomendamos que ao abrir a aplicação no swagger, começe criando primeiro um patio, depois crie o cliente, depois crie a moto pois so é possivel criar uma moto se existe um cliente e patio cadastrado, por ultimo apos criar a moto crie sensores de localização e vincule a essa moto.
+- Não é possivel criar motos com o mesmo numero de chassi, pois chassi é um valor unico.
+- Não é possivel criar clientes com o mesmo email, pois assim como o chassi, o email é unico.
 ---
 
 ## Rotas da API
@@ -46,11 +46,11 @@ Este projeto é um sistema de rastreamento de motos desenvolvido em C# com .NET 
   Cadastra um novo cliente.  
   **Body:**
 
-  - **PUT /api/clientes/{id}**  
+- **PUT /api/clientes/{id}**  
   Atualiza os dados de um cliente existente.  
   **Body:**  
 
-  - **DELETE /api/clientes/{id}**  
+- **DELETE /api/clientes/{id}**  
   Remove um cliente do sistema.
 
 ---
@@ -66,11 +66,11 @@ Este projeto é um sistema de rastreamento de motos desenvolvido em C# com .NET 
   Cadastra uma nova moto.  
   **Body:**
   
-  - **PUT /api/motos/{id}**  
+- **PUT /api/motos/{id}**  
   Atualiza os dados de uma moto existente.  
   **Body:**
 
-  - **DELETE /api/motos/{id}**  
+- **DELETE /api/motos/{id}**  
   Remove uma moto do sistema.
 
 ---
@@ -86,11 +86,11 @@ Este projeto é um sistema de rastreamento de motos desenvolvido em C# com .NET 
   Cadastra um novo pátio.  
   **Body:**  
 
- - **PUT /api/patios/{id}**  
+- **PUT /api/patios/{id}**  
   Atualiza os dados de um pátio existente.  
   **Body:**  
 
-  - **DELETE /api/patios/{id}**  
+- **DELETE /api/patios/{id}**  
   Remove um pátio do sistema.
 
 ---
@@ -106,7 +106,7 @@ Este projeto é um sistema de rastreamento de motos desenvolvido em C# com .NET 
   Registra uma nova localização.  
   **Body:**
 
-  - **DELETE /api/sensores/{id}**  
+- **DELETE /api/sensores/{id}**  
   Remove um registro de localização.
 
 ---
