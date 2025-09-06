@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Sprint.Data;
+using Sprint.Services;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +11,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
+// Adicionar as services aqui:
+builder.Services.AddScoped<IClienteService, ClienteService>();
+
 
 builder.Services.AddSwaggerGen(configurationSwagger =>
 {

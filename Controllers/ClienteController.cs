@@ -1,19 +1,20 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System;
 using Sprint.Data;
-using Sprint.Models;
 using Sprint.Dtos;
+using Sprint.Models;
+using Sprint.Services;
+using System;
 namespace Sprint.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     public class ClienteController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly IClienteService _clienteService;
 
-        public ClienteController(AppDbContext context)
+        public ClienteController(IClienteService clienteService)
         {
-            _context = context;
+            _clienteService = clienteService;
         }
 
         /// <summary>
@@ -31,7 +32,7 @@ namespace Sprint.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Cliente>))]
         public IActionResult GetAll()
         {
-            var clientes = _context.Clientes.ToList();
+            var clientes = _clienteService.GetAll();
             return Ok(clientes);
         }
 
@@ -53,7 +54,7 @@ namespace Sprint.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetById(long id)
         {
-            var cliente = _context.Clientes.Find(id);
+            var cliente = _clienteService.GetById(id);
             if (cliente == null) return NotFound();
             return Ok(cliente);
         }
@@ -85,21 +86,12 @@ namespace Sprint.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var exists = _context.Clientes.Where(c => c.Email == clienteDto.Email).FirstOrDefault() != null;
-            if (exists)
-            {
-                return Conflict(new { message = "um cliente com esse email ja existe" });
-            }
+            var (cliente, error) = _clienteService.Create(clienteDto);
+            if (error == "um cliente com esse email ja existe")
+                return Conflict(new { message = error });
+            if (cliente == null)
+                return BadRequest();
 
-            var cliente = new Cliente
-            {
-                Nome = clienteDto.Nome,
-                Email = clienteDto.Email,
-                Senha = clienteDto.Senha
-            };
-
-            _context.Clientes.Add(cliente);
-            _context.SaveChanges();
             return CreatedAtAction(nameof(GetById), new { id = cliente.Id }, cliente);
         }
 
@@ -129,18 +121,14 @@ namespace Sprint.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult Update(long id, [FromBody] ClienteDTO clienteDto)
         {
-            if (id != clienteDto.Id) return BadRequest();
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var cliente = _context.Clientes.Find(id);
-            if (cliente == null) return NotFound();
+            var (cliente, error) = _clienteService.Update(id, clienteDto);
+            if (error == "ID do corpo não corresponde ao da URL")
+                return BadRequest();
+            if (error == "Cliente não encontrado")
+                return NotFound();
 
-            cliente.Nome = clienteDto.Nome ?? cliente.Nome;
-            cliente.Email = clienteDto.Email ?? cliente.Email;
-            if (!string.IsNullOrEmpty(clienteDto.Senha))
-                cliente.Senha = clienteDto.Senha;
-
-            _context.Clientes.Update(cliente);
-            _context.SaveChanges();
             return Ok(cliente);
         }
 
@@ -161,11 +149,8 @@ namespace Sprint.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult Delete(long id)
         {
-            var cliente = _context.Clientes.Find(id);
-            if (cliente == null) return NotFound();
-
-            _context.Clientes.Remove(cliente);
-            _context.SaveChanges();
+            var deleted = _clienteService.Delete(id);
+            if (!deleted) return NotFound();
             return NoContent();
         }
     }
