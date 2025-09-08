@@ -1,22 +1,20 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Sprint.Models;
-using Sprint.Data;
-using System;
 using Sprint.Dtos;
+using Sprint.Models;
+using Sprint.Services;
+using System.Collections.Generic;
 
 namespace Sprint.Controllers
 {
-
     [ApiController]
     [Route("api/[controller]")]
     public class SensorLocalizacaoController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly ISensorLocalizacaoService _sensorService;
 
-        public SensorLocalizacaoController(AppDbContext context)
+        public SensorLocalizacaoController(ISensorLocalizacaoService sensorService)
         {
-            _context = context;
+            _sensorService = sensorService;
         }
 
         /// <summary>
@@ -34,7 +32,7 @@ namespace Sprint.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<SensorLocalizacao>))]
         public IActionResult GetAll()
         {
-            var sensores = _context.Sensores.ToList();
+            var sensores = _sensorService.GetAll();
             return Ok(sensores);
         }
 
@@ -56,7 +54,7 @@ namespace Sprint.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetById(long id)
         {
-            var sensor = _context.Sensores.Find(id);
+            var sensor = _sensorService.GetById(id);
             if (sensor == null) return NotFound();
             return Ok(sensor);
         }
@@ -87,23 +85,10 @@ namespace Sprint.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            // Verifica se o MotoId existe no banco
-            var moto = _context.Motos.FirstOrDefault(m => m.Id == sensorDto.MotoId);
-            if (moto == null)
-            {
-                return BadRequest(new { message = "id invalido. o id da moto nao existe" });
-            }
+            var (sensor, error) = _sensorService.Create(sensorDto);
+            if (sensor == null)
+                return BadRequest(new { message = error });
 
-            var sensor = new SensorLocalizacao
-            {
-                Latitude = sensorDto.Latitude,
-                Longitude = sensorDto.Longitude,
-                TimeDaLocalizacao = sensorDto.TimeDaLocalizacao,
-                MotoId = sensorDto.MotoId
-            };
-
-            _context.Sensores.Add(sensor);
-            _context.SaveChanges();
             return CreatedAtAction(nameof(GetById), new { id = sensor.Id }, sensor);
         }
 
@@ -134,17 +119,14 @@ namespace Sprint.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult Update(long id, [FromBody] SensorLocalizacaoDTO sensorDto)
         {
-            if (id != sensorDto.Id) return BadRequest();
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var sensor = _context.Sensores.Find(id);
-            if (sensor == null) return NotFound();
+            var (sensor, error) = _sensorService.Update(id, sensorDto);
+            if (error == "ID do corpo não corresponde ao da URL")
+                return BadRequest();
+            if (error == "Sensor de localização não encontrado")
+                return NotFound();
 
-            sensor.Latitude = sensorDto.Latitude;
-            sensor.Longitude = sensorDto.Longitude;
-            sensor.TimeDaLocalizacao = sensorDto.TimeDaLocalizacao;
-
-            _context.Sensores.Update(sensor);
-            _context.SaveChanges();
             return Ok(sensor);
         }
 
@@ -165,11 +147,8 @@ namespace Sprint.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult Delete(long id)
         {
-            var sensor = _context.Sensores.Find(id);
-            if (sensor == null) return NotFound();
-
-            _context.Sensores.Remove(sensor);
-            _context.SaveChanges();
+            var deleted = _sensorService.Delete(id);
+            if (!deleted) return NotFound();
             return NoContent();
         }
     }

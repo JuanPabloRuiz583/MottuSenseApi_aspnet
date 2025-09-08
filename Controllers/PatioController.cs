@@ -1,9 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Sprint.Models;
-using Sprint.Data;
-using System;
 using Sprint.Dtos;
+using Sprint.Models;
+using Sprint.Services;
+using System.Collections.Generic;
 
 namespace Sprint.Controllers
 {
@@ -11,11 +10,11 @@ namespace Sprint.Controllers
     [Route("api/[controller]")]
     public class PatioController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly IPatioService _patioService;
 
-        public PatioController(AppDbContext context)
+        public PatioController(IPatioService patioService)
         {
-            _context = context;
+            _patioService = patioService;
         }
 
         /// <summary>
@@ -33,7 +32,7 @@ namespace Sprint.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Patio>))]
         public IActionResult GetAll()
         {
-            var patios = _context.Patios.ToList();
+            var patios = _patioService.GetAll();
             return Ok(patios);
         }
 
@@ -55,7 +54,7 @@ namespace Sprint.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetById(long id)
         {
-            var patio = _context.Patios.Find(id);
+            var patio = _patioService.GetById(id);
             if (patio == null) return NotFound();
             return Ok(patio);
         }
@@ -84,14 +83,10 @@ namespace Sprint.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var patio = new Patio
-            {
-                Nome = patioDto.Nome,
-                Endereco = patioDto.Endereco
-            };
+            var (patio, error) = _patioService.Create(patioDto);
+            if (patio == null)
+                return BadRequest(new { message = error });
 
-            _context.Patios.Add(patio);
-            _context.SaveChanges();
             return CreatedAtAction(nameof(GetById), new { id = patio.Id }, patio);
         }
 
@@ -120,16 +115,14 @@ namespace Sprint.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult Update(long id, [FromBody] PatioDTO patioDto)
         {
-            if (id != patioDto.Id) return BadRequest();
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var patio = _context.Patios.Find(id);
-            if (patio == null) return NotFound();
+            var (patio, error) = _patioService.Update(id, patioDto);
+            if (error == "ID do corpo não corresponde ao da URL")
+                return BadRequest();
+            if (error == "Pátio não encontrado")
+                return NotFound();
 
-            patio.Nome = patioDto.Nome ?? patio.Nome;
-            patio.Endereco = patioDto.Endereco ?? patio.Endereco;
-
-            _context.Patios.Update(patio);
-            _context.SaveChanges();
             return Ok(patio);
         }
 
@@ -150,11 +143,8 @@ namespace Sprint.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult Delete(long id)
         {
-            var patio = _context.Patios.Find(id);
-            if (patio == null) return NotFound();
-
-            _context.Patios.Remove(patio);
-            _context.SaveChanges();
+            var deleted = _patioService.Delete(id);
+            if (!deleted) return NotFound();
             return NoContent();
         }
     }

@@ -12,8 +12,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// Adicionar as services aqui:
+// Injeção de dependecias:
 builder.Services.AddScoped<IClienteService, ClienteService>();
+builder.Services.AddScoped<IMotoService, MotoService>();
+builder.Services.AddScoped<IPatioService, PatioService>();
+builder.Services.AddScoped<ISensorLocalizacaoService, SensorLocalizacaoService>();
+
 
 
 builder.Services.AddSwaggerGen(configurationSwagger =>
