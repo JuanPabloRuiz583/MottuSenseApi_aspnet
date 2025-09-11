@@ -119,13 +119,19 @@ namespace Sprint.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult Update(long id, [FromBody] SensorLocalizacaoDTO sensorDto)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
             var (sensor, error) = _sensorService.Update(id, sensorDto);
+
             if (error == "ID do corpo não corresponde ao da URL")
-                return BadRequest();
+                return BadRequest(new { message = error });
+
             if (error == "Sensor de localização não encontrado")
-                return NotFound();
+                return NotFound(new { message = error });
+
+            if (error == "id invalido. o id da moto nao existe")
+                return BadRequest(new { message = error });
 
             return Ok(sensor);
         }

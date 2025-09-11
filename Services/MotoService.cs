@@ -74,15 +74,21 @@ namespace Sprint.Services
             if (moto == null)
                 return (null, "Moto não encontrada");
 
-            // Atualiza apenas se vier valor novo
+            // Não permitir atualizar para um chassi já existente em outra moto
+            if (!string.IsNullOrWhiteSpace(motoDto.NumeroChassi) && motoDto.NumeroChassi != moto.NumeroChassi)
+            {
+                var chassiExistente = _context.Motos
+                    .FirstOrDefault(m => m.NumeroChassi == motoDto.NumeroChassi && m.Id != id);
+                if (chassiExistente != null)
+                    return (null, "já existe uma moto com esse número de chassi");
+                moto.NumeroChassi = motoDto.NumeroChassi;
+            }
+
             if (!string.IsNullOrWhiteSpace(motoDto.Placa))
                 moto.Placa = motoDto.Placa;
 
             if (!string.IsNullOrWhiteSpace(motoDto.Modelo))
                 moto.Modelo = motoDto.Modelo;
-
-            if (!string.IsNullOrWhiteSpace(motoDto.NumeroChassi))
-                moto.NumeroChassi = motoDto.NumeroChassi;
 
             moto.Status = motoDto.Status;
 

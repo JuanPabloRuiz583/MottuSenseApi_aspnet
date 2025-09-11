@@ -125,6 +125,7 @@ namespace Sprint.Controllers
         /// <response code="200">Retorna a moto atualizada.</response>
         /// <response code="400">Se o corpo da requisição for inválido ou IDs não coincidirem.</response>
         /// <response code="404">Moto não encontrada.</response>
+        /// <response code="409">Se já existir uma moto com o mesmo número de chassi.</response>
         [HttpPut("{id}")]
         [Consumes("application/json")]
         [ProducesResponseType(typeof(Moto), StatusCodes.Status200OK)]
@@ -132,13 +133,22 @@ namespace Sprint.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult Update(long id, [FromBody] MotoDTO motoDto)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
             var (moto, error) = _motoService.Update(id, motoDto);
+
             if (error == "ID do corpo não corresponde ao da URL")
-                return BadRequest();
+                return BadRequest(new { message = error });
+
             if (error == "Moto não encontrada")
-                return NotFound();
+                return NotFound(new { message = error });
+
+            if (error == "patio id invalido" || error == "cliente id invalido")
+                return BadRequest(new { message = error });
+
+            if (error == "já existe uma moto com esse número de chassi")
+                return Conflict(new { message = error });
 
             return Ok(moto);
         }

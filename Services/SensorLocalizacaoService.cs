@@ -54,14 +54,21 @@ namespace Sprint.Services
             if (sensor == null)
                 return (null, "Sensor de localização não encontrado");
 
+            // Validação do MotoId
+            var moto = _context.Motos.FirstOrDefault(m => m.Id == sensorDto.MotoId);
+            if (moto == null)
+                return (null, "id invalido. o id da moto nao existe");
+
             sensor.Latitude = sensorDto.Latitude;
             sensor.Longitude = sensorDto.Longitude;
             sensor.TimeDaLocalizacao = sensorDto.TimeDaLocalizacao;
+            sensor.MotoId = sensorDto.MotoId;
 
             _context.Sensores.Update(sensor);
             _context.SaveChanges();
             return (sensor, null);
         }
+
 
         public bool Delete(long id)
         {
