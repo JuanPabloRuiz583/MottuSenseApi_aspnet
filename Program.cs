@@ -6,6 +6,12 @@ using System.Reflection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using HealthChecks.UI.Client;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +26,18 @@ builder.Services.AddScoped<IClienteService, ClienteService>();
 builder.Services.AddScoped<IMotoService, MotoService>();
 builder.Services.AddScoped<IPatioService, PatioService>();
 builder.Services.AddScoped<ISensorLocalizacaoService, SensorLocalizacaoService>();
+
+// Health Checks
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<AppDbContext>("oracle")
+    .AddCheck("self", () => HealthCheckResult.Healthy("API está rodando!"));
+
+// Health Checks UI
+builder.Services.AddHealthChecksUI(options =>
+{
+    options.SetHeaderText("MottuSense Health Checks UI");
+    options.AddHealthCheckEndpoint("API Health", "/health");
+}).AddInMemoryStorage();
 
 // Chave secreta para JWT (ideal: coloque no appsettings.json)
 var key = Encoding.ASCII.GetBytes("minha-chave-super-secreta-1234567890");
@@ -97,4 +115,18 @@ app.UseHttpsRedirection();
 app.UseAuthentication(); // Adicionado para JWT funcionar
 app.UseAuthorization();
 app.MapControllers();
+
+// Endpoint de health check detalhado (JSON)
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+});
+
+// Endpoint da interface gráfica do health check
+app.MapHealthChecksUI(options =>
+{
+    options.UIPath = "/health-ui";
+    options.ApiPath = "/health-ui-api";
+});
+
 app.Run();

@@ -53,6 +53,7 @@ namespace Sprint.Controllers
         /// <returns>O cliente encontrado ou NotFound.</returns>
         /// <response code="200">Retorna o cliente.</response>
         /// <response code="404">Cliente não encontrado.</response>
+        [ApiExplorerSettings(IgnoreApi = true)]
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Cliente))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -62,6 +63,7 @@ namespace Sprint.Controllers
             if (cliente == null) return NotFound();
             return Ok(cliente);
         }
+
 
         /// <summary>
         /// Cria um novo cliente.
@@ -99,42 +101,7 @@ namespace Sprint.Controllers
             return CreatedAtAction(nameof(GetById), new { id = cliente.Id }, cliente);
         }
 
-        /// <summary>
-        /// Atualiza um cliente existente.
-        /// </summary>
-        /// <param name="id">ID do cliente a ser atualizado.</param>
-        /// <param name="clienteDto">Objeto cliente com os dados atualizados.</param>
-        /// <remarks>
-        /// Exemplo de requisição:
-        ///
-        ///     PUT /api/Cliente/1
-        ///     {
-        ///         "id": 1,
-        ///         "nome": "João da Silva Atualizado",
-        ///         "email": "joao@email.com",
-        ///         "senha": "novasenha123"
-        ///     }
-        /// </remarks>
-        /// <returns>O cliente atualizado.</returns>
-        /// <response code="200">Retorna o cliente atualizado.</response>
-        /// <response code="400">Se o corpo da requisição for inválido ou IDs não coincidirem.</response>
-        /// <response code="404">Cliente não encontrado.</response>
-        [HttpPut("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Cliente))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult Update(long id, [FromBody] ClienteDTO clienteDto)
-        {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-
-            var (cliente, error) = _clienteService.Update(id, clienteDto);
-            if (error == "ID do corpo não corresponde ao da URL")
-                return BadRequest();
-            if (error == "Cliente não encontrado")
-                return NotFound();
-
-            return Ok(cliente);
-        }
+       
 
         /// <summary>
         /// Remove um cliente pelo ID.
@@ -166,7 +133,32 @@ namespace Sprint.Controllers
 
 
 
-
+        /// <summary>
+        /// Realiza o login do cliente e retorna um token JWT.
+        /// </summary>
+        /// <param name="loginDto">Credenciais de login (email e senha).</param>
+        /// <remarks>
+        /// Exemplo de requisição:
+        ///
+        ///     POST /api/Cliente/login
+        ///     {
+        ///         "email": "joao@email.com",
+        ///         "senha": "senha1234"
+        ///     }
+        ///
+        /// Exemplo de resposta (200):
+        /// {
+        ///     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        ///     "cliente": {
+        ///         "id": 1,
+        ///         "nome": "João da Silva",
+        ///         "email": "joao@email.com"
+        ///     }
+        /// }
+        /// </remarks>
+        /// <returns>Token JWT e dados do cliente autenticado.</returns>
+        /// <response code="200">Login realizado com sucesso. Retorna o token JWT e os dados do cliente.</response>
+        /// <response code="401">Email ou senha inválidos.</response>
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginDTO loginDto)
         {
