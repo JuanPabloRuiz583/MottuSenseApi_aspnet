@@ -77,5 +77,11 @@ namespace Sprint.Services
             _context.SaveChanges();
             return true;
         }
+
+        public Cliente Authenticate(string email, string senha)
+        {
+            return _context.Clientes.FirstOrDefault(c => c.Email == email && c.Senha == senha);
+        }
+
     }
 }

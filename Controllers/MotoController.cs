@@ -3,12 +3,14 @@ using Sprint.Dtos;
 using Sprint.Models;
 using Sprint.Services;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Sprint.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     [Produces("application/json")]
+    [Authorize]
     public class MotoController : ControllerBase
     {
         private readonly IMotoService _motoService;

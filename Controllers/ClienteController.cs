@@ -4,6 +4,10 @@ using Sprint.Dtos;
 using Sprint.Models;
 using Sprint.Services;
 using System;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 namespace Sprint.Controllers
 {
     [ApiController]
@@ -152,6 +156,43 @@ namespace Sprint.Controllers
             var deleted = _clienteService.Delete(id);
             if (!deleted) return NotFound();
             return NoContent();
+        }
+
+
+
+
+
+
+
+
+
+
+        [HttpPost("login")]
+        public IActionResult Login([FromBody] LoginDTO loginDto)
+        {
+            var cliente = _clienteService.Authenticate(loginDto.Email, loginDto.Senha);
+            if (cliente == null)
+                return Unauthorized(new { message = "Email ou senha inválidos" });
+
+            // Geração do token JWT
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes("minha-chave-super-secreta-1234567890"); // Troque por uma chave forte e segura
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+            new Claim(ClaimTypes.NameIdentifier, cliente.Id.ToString()),
+            new Claim(ClaimTypes.Email, cliente.Email)
+        }),
+                Expires = DateTime.UtcNow.AddHours(2),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+                        return Ok(new
+            {
+                token = tokenHandler.WriteToken(token),
+                cliente = new { cliente.Id, cliente.Nome, cliente.Email }
+            });
         }
     }
 }

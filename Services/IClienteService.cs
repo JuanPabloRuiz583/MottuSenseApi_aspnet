@@ -11,5 +11,6 @@ namespace Sprint.Services
         (Cliente cliente, string error) Create(ClienteDTO clienteDto);
         (Cliente cliente, string error) Update(long id, ClienteDTO clienteDto);
         bool Delete(long id);
+        Cliente Authenticate(string email, string senha);
     }
 }

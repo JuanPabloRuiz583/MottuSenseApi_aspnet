@@ -3,11 +3,13 @@ using Sprint.Dtos;
 using Sprint.Models;
 using Sprint.Services;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Sprint.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class PatioController : ControllerBase
     {
         private readonly IPatioService _patioService;
