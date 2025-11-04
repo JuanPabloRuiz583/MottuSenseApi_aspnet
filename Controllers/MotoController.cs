@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Sprint.Dtos;
 using Sprint.Models;
+using Sprint.ml;
 using Sprint.Services;
 using System.Collections.Generic;
-using Microsoft.AspNetCore.Authorization;
+using Microsoft.ML;
 
 namespace Sprint.Controllers
 {
@@ -175,6 +177,50 @@ namespace Sprint.Controllers
             var deleted = _motoService.Delete(id);
             if (!deleted) return NotFound();
             return NoContent();
+        }
+
+
+
+
+
+
+
+
+        /// <summary>
+        /// Realiza a previsão do status de uma moto com base nos dados informados.
+        /// </summary>
+        /// <remarks>
+        /// Exemplo de requisição:
+        ///
+        ///     POST /api/Moto/predict-status
+        ///     {
+        ///         "PatioId": 1,
+        ///         "ClienteId": 2,
+        ///         "NumeroChassiLength": 17
+        ///     }
+        ///
+        /// O modelo foi treinado apenas com esses campos. A previsão é feita independentemente da moto existir ou não no sistema.
+        /// </remarks>
+        /// <param name="input">Dados da moto para previsão do status.</param>
+        /// <returns>O status previsto e as probabilidades para cada classe.</returns>
+        /// <response code="200">Retorna o status previsto da moto.</response>
+        /// <response code="400">Se os dados enviados estiverem inválidos.</response>
+        [HttpPost("predict-status")]
+        public IActionResult PredictStatus([FromBody] MotoInput input)
+        {
+            var mlContext = new MLContext();
+            var modelPath = Path.Combine(AppContext.BaseDirectory, "MLModels", "MotoStatusModel.zip");
+
+            // Carregar o modelo treinado
+            var model = mlContext.Model.Load(modelPath, out _);
+
+            // Criar engine de previsão
+            var predictionEngine = mlContext.Model.CreatePredictionEngine<MotoInput, MotoPrediction>(model);
+
+            // Fazer a previsão
+            var prediction = predictionEngine.Predict(input);
+
+            return Ok(prediction);
         }
     }
 }

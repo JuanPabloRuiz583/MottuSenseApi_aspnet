@@ -1,17 +1,19 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
-using Sprint.Data;
-using Sprint.Services;
-using System.Reflection;
+using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
+using Microsoft.OpenApi.Models;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-using HealthChecks.UI.Client;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Sprint.Data;
+using Sprint.ml;
+using Sprint.Services;
+using Sprint.ml; // Namespace da classe MotoModelTrainer
+using System.Reflection;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -101,6 +103,12 @@ builder.Services.AddSwaggerGen(configurationSwagger =>
     var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     configurationSwagger.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 });
+
+// Treinar e salvar o modelo ML.NET
+var trainer = new MotoModelTrainer();
+string dataPath = "dados.csv"; // Substitua pelo caminho correto do arquivo de dados
+string modelPath = Path.Combine(AppContext.BaseDirectory, "MLModels", "MotoStatusModel.zip");
+trainer.TrainAndSaveModel(dataPath, modelPath);
 
 var app = builder.Build();
 
